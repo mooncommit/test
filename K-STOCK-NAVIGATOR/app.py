@@ -1,4 +1,3 @@
-import cats
 import streamlit as st
 import requests
 import pandas as pd
@@ -17,15 +16,17 @@ if "selected" not in st.session_state:
 def fetch(url, params=None):
     try:
         res = requests.get(f"{BASE_URL}/{url}", params=params, timeout=5)
+        res.raise_for_status()
         return res.json()
     except Exception as e:
         st.error(f"API 오류: {e}")
-        return []   # ✅ None → []로 변경
+        return None
 
 
 st.title("📊 K-STOCK NAVIGATOR")
 
 # 카테고리
+cats = fetch("stock/categories") or []
 if not cats:
     st.error("❌ 카테고리 데이터 없음 (서버 확인)")
     st.stop()
@@ -41,7 +42,7 @@ for i,c in enumerate(cats):
 
 
 # 종목 리스트
-data = fetch("stock/realtime", {"category": st.session_state.cat})
+data = fetch("stock/realtime", {"category": st.session_state.cat}) or []
 
 st.subheader("📈 종목")
 
@@ -68,9 +69,12 @@ if st.session_state.selected:
 
     st.write(detail)
 
-    df = pd.DataFrame({
-        "date": chart["dates"],
-        "price": chart["prices"]
-    }).set_index("date")
+    if isinstance(chart, dict) and chart.get("dates") and chart.get("prices"):
+        df = pd.DataFrame({
+            "date": chart["dates"],
+            "price": chart["prices"]
+        }).set_index("date")
 
-    st.line_chart(df)
+        st.line_chart(df)
+    else:
+        st.warning("차트 데이터를 불러오지 못했습니다.")

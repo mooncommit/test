@@ -3,8 +3,11 @@ from fastapi.middleware.cors import CORSMiddleware
 import yfinance as yf
 from typing import Optional
 import random
+from database import Base, engine
+from routers import stock, trade, user
 
 app = FastAPI()
+Base.metadata.create_all(bind=engine)
 
 app.add_middleware(
     CORSMiddleware,
@@ -12,6 +15,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.include_router(user.router)
+app.include_router(stock.router)
+app.include_router(trade.router)
 
 # 🔥 추가 (404 방지용)
 @app.get("/")

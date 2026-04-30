@@ -1,0 +1,7 @@
+__pycache__/
+*.py[cod]
+.Python
+.idea/
+.DS_Store
+.venv/
+.git-nested-backup/
